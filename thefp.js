@@ -37,8 +37,8 @@
         container.style.display = 'flex';
         container.style.gap = '10px';
 
-        // Create Open Audio button
-        const openBtn = document.createElement('button');
+        // Create Open Audio box
+        const openBtn = document.createElement('div');
         openBtn.textContent = 'Open Audio';
         openBtn.style.backgroundColor = '#000000';
         openBtn.style.color = '#ffffff';
@@ -48,12 +48,10 @@
         openBtn.style.fontFamily = 'inherit';
         openBtn.style.fontSize = '14px';
         openBtn.style.borderRadius = '4px';
-        openBtn.style.display = 'block';
-        openBtn.style.width = 'auto';
+        openBtn.style.display = 'inline-block';
         openBtn.style.minWidth = '100px';
         openBtn.style.textAlign = 'center';
-        openBtn.style.userSelect = 'none'; // Prevent text selection
-        openBtn.style.outline = 'none'; // Remove focus outline
+        openBtn.style.userSelect = 'none';
         
         openBtn.addEventListener('mouseover', () => {
             openBtn.style.backgroundColor = '#333333';
@@ -64,12 +62,16 @@
         openBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
+            
+            // Prevent multiple clicks during processing
+            if (openBtn.textContent !== 'Open Audio') {
+                return;
+            }
+            
             console.log('Open attempt for:', src);
             
             // Show loading state
-            const originalText = openBtn.textContent;
             openBtn.textContent = 'Loading...';
-            openBtn.disabled = true;
             openBtn.style.cursor = 'wait';
             
             // Small delay to show loading state, then proceed with download
@@ -87,8 +89,7 @@
                     // Show success state briefly
                     openBtn.textContent = 'Downloaded!';
                     setTimeout(() => {
-                        openBtn.textContent = originalText;
-                        openBtn.disabled = false;
+                        openBtn.textContent = 'Open Audio';
                         openBtn.style.cursor = 'pointer';
                     }, 1500);
                     
@@ -96,8 +97,7 @@
                     console.error('Open failed:', e);
                     openBtn.textContent = 'Failed!';
                     setTimeout(() => {
-                        openBtn.textContent = originalText;
-                        openBtn.disabled = false;
+                        openBtn.textContent = 'Open Audio';
                         openBtn.style.cursor = 'pointer';
                     }, 2000);
                     alert('Open failed. Check console for details or ensure the URL is accessible.');
@@ -106,8 +106,8 @@
             }, 100);
         });
 
-        // Create Copy Audio button
-        const copyBtn = document.createElement('button');
+        // Create Copy Audio box
+        const copyBtn = document.createElement('div');
         copyBtn.textContent = 'Copy Audio';
         copyBtn.style.backgroundColor = '#000000';
         copyBtn.style.color = '#ffffff';
@@ -117,12 +117,10 @@
         copyBtn.style.fontFamily = 'inherit';
         copyBtn.style.fontSize = '14px';
         copyBtn.style.borderRadius = '4px';
-        copyBtn.style.display = 'block';
-        copyBtn.style.width = 'auto';
+        copyBtn.style.display = 'inline-block';
         copyBtn.style.minWidth = '100px';
         copyBtn.style.textAlign = 'center';
-        copyBtn.style.userSelect = 'none'; // Prevent text selection
-        copyBtn.style.outline = 'none'; // Remove focus outline
+        copyBtn.style.userSelect = 'none';
         
         copyBtn.addEventListener('mouseover', () => {
             copyBtn.style.backgroundColor = '#333333';
