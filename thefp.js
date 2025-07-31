@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Audio Downloader
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.0.2
 // @description  Adds download and copy URL buttons for audio elements on thefp.com and substack.com
 // @author       Grok
 // @match        https://www.thefp.com/*
@@ -14,44 +14,45 @@
 (function() {
     'use strict';
 
+    console.log('Script loaded, checking MDI...');
+
     // Function to create buttons for each audio element
     function addAudioControls(audio) {
-        // Skip if already processed
         if (audio.dataset.processed) return;
         audio.dataset.processed = 'true';
 
-        // Get the audio source URL
         let src = audio.src;
-        // Ensure absolute URL
         if (src.startsWith('/')) {
             src = window.location.origin + src;
         }
 
-        // Create container for buttons
         const container = document.createElement('div');
         container.style.margin = '10px 0';
         container.style.display = 'flex';
         container.style.gap = '10px';
 
-        // Create Download button with MDI icon
+        // Create Download button with MDI icon or fallback
         const downloadBtn = document.createElement('button');
         downloadBtn.innerHTML = '<i class="mdi mdi-download"></i> Download Audio';
+        if (!document.querySelector('.mdi')) {
+            downloadBtn.textContent = 'Download Audio'; // Fallback if MDI fails
+            console.warn('MDI not detected, using text fallback');
+        }
         downloadBtn.style.padding = '5px 10px';
         downloadBtn.style.cursor = 'pointer';
         downloadBtn.style.background = 'none';
         downloadBtn.style.border = 'none';
         downloadBtn.style.fontFamily = 'inherit';
         downloadBtn.addEventListener('click', () => {
-            // Create a temporary link for download
+            console.log('Download attempt for:', src);
             const a = document.createElement('a');
             a.href = src;
-            // Fallback filename if split fails
             let filename = src.split('/').pop() || `audio_${Date.now()}.mp3`;
             a.download = filename;
             document.body.appendChild(a);
             try {
                 a.click();
-                console.log('Download initiated for:', src);
+                console.log('Download initiated');
             } catch (e) {
                 console.error('Download failed:', e);
                 alert('Download failed. Check console for details.');
@@ -59,22 +60,26 @@
             document.body.removeChild(a);
         });
 
-        // Create Copy URL button with MDI icon
+        // Create Copy URL button with MDI icon or fallback
         const copyBtn = document.createElement('button');
         copyBtn.innerHTML = '<i class="mdi mdi-content-copy"></i> Copy Audio URL';
+        if (!document.querySelector('.mdi')) {
+            copyBtn.textContent = 'Copy Audio URL'; // Fallback if MDI fails
+        }
         copyBtn.style.padding = '5px 10px';
         copyBtn.style.cursor = 'pointer';
         copyBtn.style.background = 'none';
         copyBtn.style.border = 'none';
         copyBtn.style.fontFamily = 'inherit';
         copyBtn.addEventListener('click', () => {
+            console.log('Copy attempt for:', src);
             navigator.clipboard.writeText(src).then(() => {
                 copyBtn.textContent = '<i class="mdi mdi-check"></i> URL Copied!';
                 setTimeout(() => {
                     copyBtn.innerHTML = '<i class="mdi mdi-content-copy"></i> Copy Audio URL';
                 }, 2000);
             }).catch(err => {
-                console.error('Failed to copy URL:', err);
+                console.error('Copy failed:', err);
                 copyBtn.textContent = '<i class="mdi mdi-alert"></i> Copy Failed';
                 setTimeout(() => {
                     copyBtn.innerHTML = '<i class="mdi mdi-content-copy"></i> Copy Audio URL';
@@ -82,21 +87,16 @@
             });
         });
 
-        // Append buttons to container
         container.appendChild(downloadBtn);
         container.appendChild(copyBtn);
-
-        // Insert container after audio element
         audio.parentNode.insertBefore(container, audio.nextSibling);
     }
 
-    // Process existing audio elements
     function processAudioElements() {
         const audios = document.querySelectorAll('audio[src]');
         audios.forEach(addAudioControls);
     }
 
-    // Observe for dynamically added audio elements
     const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.addedNodes.length) {
@@ -114,13 +114,7 @@
         });
     });
 
-    // Start observing
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-
-    // Initial processing
+    observer.observe(document.body, { childList: true, subtree: true });
     processAudioElements();
-
+    console.log('Script initialized, observing DOM...');
 })();
