@@ -7,6 +7,8 @@
 // @match        https://www.thefp.com/*
 // @match        https://*.substack.com/*
 // @require      https://cdn.materialdesignicons.com/7.2.96/css/materialdesignicons.min.css
+// @downloadURL  https://raw.githubusercontent.com/jeeftor/user-scripts/master/thefp.js
+// @updateURL    https://raw.githubusercontent.com/jeeftor/user-scripts/master/thefp.js
 // ==/UserScript==
 
 (function() {
