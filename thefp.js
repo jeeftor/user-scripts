@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Audio Downloader
 // @namespace    http://tampermonkey.net/
-// @version 0.0.3
+// @version 0.0.4
 // @description  Adds open and copy URL buttons for audio elements on thefp.com and substack.com
 // @author       Grok
 // @match        https://www.thefp.com/*
@@ -52,6 +52,11 @@
         openBtn.style.minWidth = '100px';
         openBtn.style.textAlign = 'center';
         openBtn.style.userSelect = 'none';
+        openBtn.style.pointerEvents = 'auto';
+        openBtn.style.position = 'relative';
+        openBtn.style.zIndex = '1000';
+        openBtn.style.lineHeight = 'normal';
+        openBtn.style.boxSizing = 'border-box';
         
         openBtn.addEventListener('mouseover', () => {
             openBtn.style.backgroundColor = '#333333';
@@ -121,6 +126,11 @@
         copyBtn.style.minWidth = '100px';
         copyBtn.style.textAlign = 'center';
         copyBtn.style.userSelect = 'none';
+        copyBtn.style.pointerEvents = 'auto';
+        copyBtn.style.position = 'relative';
+        copyBtn.style.zIndex = '1000';
+        copyBtn.style.lineHeight = 'normal';
+        copyBtn.style.boxSizing = 'border-box';
         
         copyBtn.addEventListener('mouseover', () => {
             copyBtn.style.backgroundColor = '#333333';
