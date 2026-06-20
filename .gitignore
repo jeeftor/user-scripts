@@ -1,0 +1,4 @@
+node_modules/
+*.local.user.js
+*.private.user.js
+settings.local.json
