@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         Free Press Audio Downloader
 // @namespace    http://tampermonkey.net/
-// @version 0.0.5
+// @version 0.0.6
 // @description  Adds open and copy URL buttons for audio elements on thefp.com and substack.com
-// @author       Grok
+// @author       jeeftor
 // @match        https://www.thefp.com/*
 // @match        https://*.substack.com/*
+// @grant        GM_setClipboard
 // @downloadURL  https://raw.githubusercontent.com/jeeftor/userScripts/master/thefp.js
 // @updateURL    https://raw.githubusercontent.com/jeeftor/userScripts/master/thefp.js
 // ==/UserScript==
@@ -142,18 +143,19 @@
             e.preventDefault();
             e.stopPropagation();
             console.log('Copy attempt for:', src);
-            navigator.clipboard.writeText(src).then(() => {
+            try {
+                GM_setClipboard(src, 'text');
                 copyBtn.textContent = 'Copied!';
                 setTimeout(() => {
                     copyBtn.textContent = 'Copy Audio';
                 }, 2000);
-            }).catch(err => {
+            } catch (err) {
                 console.error('Copy failed:', err);
                 copyBtn.textContent = 'Copy Failed';
                 setTimeout(() => {
                     copyBtn.textContent = 'Copy Audio';
                 }, 2000);
-            });
+            }
         });
 
         container.appendChild(openBtn);

@@ -1,9 +1,14 @@
 // ==UserScript==
 // @name     Abook NZB Helpers
-// @version  1.0.1
+// @version  1.0.2
+// @description Add NZB search, NZBDonkey, and copy helpers to Abook topic pages.
+// @author   jeeftor
 // @match    https://abook.link/book/index.php?topic=*
+// @grant    GM_setClipboard
 // @run-at   document-idle
 // @noframes
+// @downloadURL https://raw.githubusercontent.com/jeeftor/userScripts/master/scripts/abook-nzb-helpers/abook-nzb-helpers.user.js
+// @updateURL   https://raw.githubusercontent.com/jeeftor/userScripts/master/scripts/abook-nzb-helpers/abook-nzb-helpers.user.js
 // ==/UserScript==
 
 const NZBLNK_ICON_SRC = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2290%22%20height%3D%2235%22%20viewBox%3D%220%200%2090%2035%22%3E%3Crect%20width%3D%2290%22%20height%3D%2235%22%20rx%3D%224%22%20fill%3D%22%232196f3%22%2F%3E%3Ctext%20x%3D%2245%22%20y%3D%2222%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2214%22%20font-weight%3D%22700%22%20fill%3D%22white%22%20text-anchor%3D%22middle%22%3ENZB%3C%2Ftext%3E%3C%2Fsvg%3E';
@@ -139,6 +144,11 @@ function inject_nzbdonkey(code, title, search, password, time) {
 }
 
 function kooba_copy_clipboard_str(str) {
+  if (typeof GM_setClipboard === 'function') {
+    GM_setClipboard(str, 'text');
+    return;
+  }
+
   const el = document.createElement('textarea');
   el.value = str;
   el.setAttribute('readonly', '');

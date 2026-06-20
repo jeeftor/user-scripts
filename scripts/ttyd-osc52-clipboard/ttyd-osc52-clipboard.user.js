@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name         ttyd OSC52 Clipboard
-// @version      0.1.0
+// @version      0.1.1
 // @description  Copy tmux OSC52 clipboard sequences from ttyd/xterm.js
+// @author       jeeftor
 // @match        http://*/*
 // @match        https://*/*
 // @grant        GM_setClipboard
@@ -10,6 +11,8 @@
 // @grant        GM_registerMenuCommand
 // @grant        unsafeWindow
 // @run-at       document-idle
+// @downloadURL  https://raw.githubusercontent.com/jeeftor/userScripts/master/scripts/ttyd-osc52-clipboard/ttyd-osc52-clipboard.user.js
+// @updateURL    https://raw.githubusercontent.com/jeeftor/userScripts/master/scripts/ttyd-osc52-clipboard/ttyd-osc52-clipboard.user.js
 // ==/UserScript==
 
 (function () {

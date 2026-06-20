@@ -1,6 +1,6 @@
 USER_SCRIPTS := $(shell find . -maxdepth 1 -name '*.js'; find scripts -name '*.user.js' 2>/dev/null)
 
-.PHONY: help list changed-versions all-versions patch minor major test
+.PHONY: help list changed-versions all-versions patch minor major test check
 
 help:
 	@printf '%s\n' 'Available targets:'
@@ -12,6 +12,7 @@ help:
 	@printf '  %-10s %s\n' 'minor' 'Increment minor versions.'
 	@printf '  %-10s %s\n' 'major' 'Increment major versions.'
 	@printf '  %-10s %s\n' 'test' 'Run userscript checks.'
+	@printf '  %-10s %s\n' 'check' 'Run tests and JavaScript syntax checks.'
 
 list:
 	@printf '%s\n' 'Current versions:'
@@ -46,3 +47,11 @@ major:
 
 test:
 	npm test
+
+check:
+	npm test
+	node --check scripts/bump-userscript-versions.mjs
+	node --check scripts/check-userscript-version-bumps.mjs
+	@for file in $(USER_SCRIPTS); do \
+		node --check "$$file"; \
+	done

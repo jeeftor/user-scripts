@@ -1,9 +1,13 @@
 // ==UserScript==
 // @name     NZBKing Named Downloader
-// @version  1.0.1
+// @version  1.0.2
+// @description Download NZBKing NZB files with useful filenames from URL, clipboard, or page data.
+// @author   jeeftor
 // @match    https://nzbking.com/*
 // @run-at   document-idle
 // @noframes
+// @downloadURL https://raw.githubusercontent.com/jeeftor/userScripts/master/scripts/nzbking-named-downloader/nzbking-named-downloader.user.js
+// @updateURL   https://raw.githubusercontent.com/jeeftor/userScripts/master/scripts/nzbking-named-downloader/nzbking-named-downloader.user.js
 // ==/UserScript==
 
 (() => {

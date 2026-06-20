@@ -2,6 +2,8 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
+const workflowPath = new URL('../.github/workflows/check.yml', import.meta.url);
+const readmePath = new URL('../README.md', import.meta.url);
 const scriptPath = new URL('../scripts/ttyd-osc52-clipboard/ttyd-osc52-clipboard.user.js', import.meta.url);
 const freePressScriptPath = new URL('../thefp.js', import.meta.url);
 const makefilePath = new URL('../Makefile', import.meta.url);
@@ -10,6 +12,33 @@ const nzbkingScriptPath = new URL(
   '../scripts/nzbking-named-downloader/nzbking-named-downloader.user.js',
   import.meta.url,
 );
+
+const userscripts = [
+  {
+    name: 'Free Press Audio Downloader',
+    path: 'thefp.js',
+    url: freePressScriptPath,
+    version: '0.0.6',
+  },
+  {
+    name: 'Abook NZB Helpers',
+    path: 'scripts/abook-nzb-helpers/abook-nzb-helpers.user.js',
+    url: abookScriptPath,
+    version: '1.0.2',
+  },
+  {
+    name: 'NZBKing Named Downloader',
+    path: 'scripts/nzbking-named-downloader/nzbking-named-downloader.user.js',
+    url: nzbkingScriptPath,
+    version: '1.0.2',
+  },
+  {
+    name: 'ttyd OSC52 Clipboard',
+    path: 'scripts/ttyd-osc52-clipboard/ttyd-osc52-clipboard.user.js',
+    url: scriptPath,
+    version: '0.1.1',
+  },
+];
 
 async function readScript() {
   return readFile(scriptPath, 'utf8');
@@ -20,8 +49,11 @@ test('userscript metadata is public and installable', async () => {
 
   assert.match(source, /\/\/ ==UserScript==/);
   assert.match(source, /@name\s+ttyd OSC52 Clipboard/);
-  assert.match(source, /@version\s+0\.1\.0/);
+  assert.match(source, /@version\s+0\.1\.1/);
   assert.match(source, /@description\s+Copy tmux OSC52 clipboard sequences from ttyd\/xterm\.js/);
+  assert.match(source, /@author\s+jeeftor/);
+  assert.match(source, /@downloadURL\s+https:\/\/raw\.githubusercontent\.com\/jeeftor\/userScripts\/master\/scripts\/ttyd-osc52-clipboard\/ttyd-osc52-clipboard\.user\.js/);
+  assert.match(source, /@updateURL\s+https:\/\/raw\.githubusercontent\.com\/jeeftor\/userScripts\/master\/scripts\/ttyd-osc52-clipboard\/ttyd-osc52-clipboard\.user\.js/);
   assert.match(source, /@match\s+http:\/\/\*\/\*/);
   assert.match(source, /@match\s+https:\/\/\*\/\*/);
   assert.match(source, /@grant\s+GM_setClipboard/);
@@ -59,9 +91,12 @@ test('existing Free Press script is preserved at the root update URL path', asyn
   const source = await readFile(freePressScriptPath, 'utf8');
 
   assert.match(source, /@name\s+Free Press Audio Downloader/);
+  assert.match(source, /@author\s+jeeftor/);
   assert.match(source, /@match\s+https:\/\/www\.thefp\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/\*\.substack\.com\/\*/);
-  assert.match(source, /@version\s+0\.0\.5/);
+  assert.match(source, /@version\s+0\.0\.6/);
+  assert.match(source, /@grant\s+GM_setClipboard/);
+  assert.match(source, /GM_setClipboard\(src, 'text'\)/);
   assert.match(source, /@updateURL\s+https:\/\/raw\.githubusercontent\.com\/jeeftor\/userScripts\/master\/thefp\.js/);
 });
 
@@ -69,7 +104,12 @@ test('Abook NZB Helpers is tracked as an installable userscript', async () => {
   const source = await readFile(abookScriptPath, 'utf8');
 
   assert.match(source, /@name\s+Abook NZB Helpers/);
-  assert.match(source, /@version\s+1\.0\.1/);
+  assert.match(source, /@version\s+1\.0\.2/);
+  assert.match(source, /@description\s+Add NZB search, NZBDonkey, and copy helpers to Abook topic pages\./);
+  assert.match(source, /@author\s+jeeftor/);
+  assert.match(source, /@downloadURL\s+https:\/\/raw\.githubusercontent\.com\/jeeftor\/userScripts\/master\/scripts\/abook-nzb-helpers\/abook-nzb-helpers\.user\.js/);
+  assert.match(source, /@updateURL\s+https:\/\/raw\.githubusercontent\.com\/jeeftor\/userScripts\/master\/scripts\/abook-nzb-helpers\/abook-nzb-helpers\.user\.js/);
+  assert.match(source, /@grant\s+GM_setClipboard/);
   assert.match(source, /@match\s+https:\/\/abook\.link\/book\/index\.php\?topic=\*/);
   assert.match(source, /@noframes/);
   assert.match(source, /const NZBLNK_ICON_SRC = 'data:image\/svg\+xml/);
@@ -85,7 +125,11 @@ test('NZBKing Named Downloader is tracked as an installable userscript', async (
   const source = await readFile(nzbkingScriptPath, 'utf8');
 
   assert.match(source, /@name\s+NZBKing Named Downloader/);
-  assert.match(source, /@version\s+1\.0\.1/);
+  assert.match(source, /@version\s+1\.0\.2/);
+  assert.match(source, /@description\s+Download NZBKing NZB files with useful filenames from URL, clipboard, or page data\./);
+  assert.match(source, /@author\s+jeeftor/);
+  assert.match(source, /@downloadURL\s+https:\/\/raw\.githubusercontent\.com\/jeeftor\/userScripts\/master\/scripts\/nzbking-named-downloader\/nzbking-named-downloader\.user\.js/);
+  assert.match(source, /@updateURL\s+https:\/\/raw\.githubusercontent\.com\/jeeftor\/userScripts\/master\/scripts\/nzbking-named-downloader\/nzbking-named-downloader\.user\.js/);
   assert.match(source, /@match\s+https:\/\/nzbking\.com\/\*/);
   assert.match(source, /@noframes/);
   assert.match(source, /const DEBUG = false/);
@@ -99,8 +143,50 @@ test('NZBKing Named Downloader is tracked as an installable userscript', async (
 test('Makefile can bump versions for changed userscripts or all userscripts', async () => {
   const source = await readFile(makefilePath, 'utf8');
 
+  assert.match(source, /check/);
   assert.match(source, /changed-versions/);
   assert.match(source, /all-versions/);
   assert.match(source, /scripts\/bump-userscript-versions\.mjs --changed/);
   assert.match(source, /scripts\/bump-userscript-versions\.mjs --all/);
+  assert.match(source, /scripts\/check-userscript-version-bumps\.mjs/);
+  assert.match(source, /node --check/);
+});
+
+test('every userscript has required update metadata', async () => {
+  for (const userscript of userscripts) {
+    const source = await readFile(userscript.url, 'utf8');
+    const rawUrl = `https://raw.githubusercontent.com/jeeftor/userScripts/master/${userscript.path}`;
+
+    assert.match(source, /\/\/ ==UserScript==/, userscript.path);
+    assert.match(source, /@name\s+\S+/, userscript.path);
+    assert.match(source, /@description\s+\S+/, userscript.path);
+    assert.match(source, /@author\s+jeeftor/, userscript.path);
+    assert.match(source, new RegExp(`@version\\s+${userscript.version.replaceAll('.', '\\.')}`), userscript.path);
+    assert.match(source, /@match\s+\S+/, userscript.path);
+    assert.match(source, new RegExp(`@downloadURL\\s+${rawUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`), userscript.path);
+    assert.match(source, new RegExp(`@updateURL\\s+${rawUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`), userscript.path);
+  }
+});
+
+test('README exposes raw install links for each userscript', async () => {
+  const source = await readFile(readmePath, 'utf8');
+
+  for (const userscript of userscripts) {
+    const rawUrl = `https://raw.githubusercontent.com/jeeftor/userScripts/master/${userscript.path}`;
+    assert.match(source, new RegExp(`\\[${userscript.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]`), userscript.name);
+    assert.match(source, new RegExp(rawUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), userscript.name);
+  }
+});
+
+test('GitHub Actions runs the repository check target', async () => {
+  const source = await readFile(workflowPath, 'utf8');
+
+  assert.match(source, /name: Check/);
+  assert.match(source, /on:/);
+  assert.match(source, /pull_request:/);
+  assert.match(source, /push:/);
+  assert.match(source, /npm test/);
+  assert.match(source, /make check/);
+  assert.match(source, /Check userscript version bumps/);
+  assert.match(source, /scripts\/check-userscript-version-bumps\.mjs/);
 });
