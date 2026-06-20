@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Audio Downloader
+// @name         Free Press Audio Downloader
 // @namespace    http://tampermonkey.net/
 // @version 0.0.4
 // @description  Adds open and copy URL buttons for audio elements on thefp.com and substack.com
