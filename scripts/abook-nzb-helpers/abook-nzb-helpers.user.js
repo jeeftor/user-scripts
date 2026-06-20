@@ -1,13 +1,12 @@
 // ==UserScript==
 // @name     Abook NZB Helpers
-// @version  1
+// @version  1.0.1
 // @match    https://abook.link/book/index.php?topic=*
 // @run-at   document-idle
 // @noframes
 // ==/UserScript==
 
-const nzblnk_icon =
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADggGOSHzRgAAAAABJRU5ErkJggg==';
+const NZBLNK_ICON_SRC = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2290%22%20height%3D%2235%22%20viewBox%3D%220%200%2090%2035%22%3E%3Crect%20width%3D%2290%22%20height%3D%2235%22%20rx%3D%224%22%20fill%3D%22%232196f3%22%2F%3E%3Ctext%20x%3D%2245%22%20y%3D%2222%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2214%22%20font-weight%3D%22700%22%20fill%3D%22white%22%20text-anchor%3D%22middle%22%3ENZB%3C%2Ftext%3E%3C%2Fsvg%3E';
 
 function sanatize_common(code) {
   code = code.replace(
@@ -46,6 +45,16 @@ function parse_code(codeItem) {
   const header = search_previous(codeItem.previousSibling);
   const code = search_next(codeItem.nextSibling);
   return [header, code];
+}
+
+function textContentOf(elem) {
+  return elem && elem.textContent ? elem.textContent : '';
+}
+
+function parsePostTimestamp(postTime) {
+  const match = postTime.match(/:\s(.+) »/);
+  const parsed = match ? Date.parse(match[1]) : NaN;
+  return Number.isNaN(parsed) ? Math.round(Date.now() / 1000) : Math.round(parsed / 1000);
 }
 
 function inject_nzbdonkey(code, title, search, password, time) {
@@ -121,7 +130,8 @@ function inject_nzbdonkey(code, title, search, password, time) {
   }
 
   const nzblnkIcon = document.createElement('img');
-  nzblnkIcon.setAttribute('src', `data:image/png;charset=utf-8;base64,${nzblnk_icon}`);
+  nzblnkIcon.setAttribute('src', NZBLNK_ICON_SRC);
+  nzblnkIcon.setAttribute('alt', 'NZB');
   nzblnkIcon.setAttribute('border', '0');
   nzblnk.appendChild(nzblnkIcon);
   headDiv.before(nzblnk);
@@ -244,8 +254,10 @@ function inject_search(code, title, search, password) {
 function* post_passwords(postCodes) {
   for (const postCode of postCodes) {
     const code = parse_code(postCode);
-    if (code[0].textContent.toLowerCase().includes('password')) {
-      yield code[1].textContent;
+    const headerText = textContentOf(code[0]).toLowerCase();
+    const codeText = textContentOf(code[1]);
+    if (headerText.includes('password')) {
+      yield codeText;
     } else {
       const next = next_text(postCode.nextSibling);
       if (next.toLowerCase().includes('password')) {
@@ -257,12 +269,15 @@ function* post_passwords(postCodes) {
 }
 
 function parse_post(postItem) {
-  const postTitle = postItem.querySelector('.keyinfo a').text;
+  const titleElem = postItem.querySelector('.keyinfo a');
+  if (!titleElem) return;
+
+  const postTitle = titleElem.textContent || titleElem.text || '';
   const title = postTitle.replace(/\[SPOT\]/gi, '').trim();
-  const postTime = postItem.querySelector('.keyinfo .smalltext').textContent;
-  const reTime = /:\s(.+) »/;
-  let postTimestamp = Math.round(Date.parse(postTime.match(reTime)[1]) / 1000);
-  if (!postTimestamp) postTimestamp = Math.round(Date.now() / 1000);
+  if (!title) return;
+
+  const postTime = textContentOf(postItem.querySelector('.keyinfo .smalltext'));
+  const postTimestamp = parsePostTimestamp(postTime);
   console.log('Found post: ', title);
   console.log('Timestamp: ', postTimestamp);
 
@@ -271,10 +286,12 @@ function parse_post(postItem) {
 
   for (const postCode of postCodes) {
     const code = parse_code(postCode);
-    if (!code[0].textContent.toLowerCase().includes('password')) {
+    const headerText = textContentOf(code[0]).toLowerCase();
+    const codeText = textContentOf(code[1]);
+    if (!headerText.includes('password') && code[1]) {
       const new_pw = postPasswords.pop();
       const password = new_pw || '';
-      const search = sanatize_common(code[1].textContent);
+      const search = sanatize_common(codeText);
       if (!postCode.classList.contains('code-injected')) {
         inject_nzbdonkey(code[1], title, search, password, postTimestamp);
         inject_search(postCode, title, search, password);
@@ -293,13 +310,15 @@ function process_posts() {
 
 (() => {
   process_posts();
-  const myThanks = {
-    apply: function (target, thisArg, argumentsList) {
-      setTimeout(process_posts, 200);
-      setTimeout(process_posts, 1200);
-      return Reflect.apply(target, thisArg, argumentsList);
-    },
-  };
-  const proxyThanks = new Proxy(saythanks.prototype.init, myThanks);
-  saythanks.prototype.init = proxyThanks;
+  if (typeof saythanks !== 'undefined' && saythanks.prototype && typeof saythanks.prototype.init === 'function') {
+    const myThanks = {
+      apply: function (target, thisArg, argumentsList) {
+        setTimeout(process_posts, 200);
+        setTimeout(process_posts, 1200);
+        return Reflect.apply(target, thisArg, argumentsList);
+      },
+    };
+    const proxyThanks = new Proxy(saythanks.prototype.init, myThanks);
+    saythanks.prototype.init = proxyThanks;
+  }
 })();

@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         Free Press Audio Downloader
 // @namespace    http://tampermonkey.net/
-// @version 0.0.4
+// @version 0.0.5
 // @description  Adds open and copy URL buttons for audio elements on thefp.com and substack.com
 // @author       Grok
 // @match        https://www.thefp.com/*
 // @match        https://*.substack.com/*
-// @downloadURL  https://raw.githubusercontent.com/jeeftor/user-scripts/master/thefp.js
-// @updateURL    https://raw.githubusercontent.com/jeeftor/user-scripts/master/thefp.js
+// @downloadURL  https://raw.githubusercontent.com/jeeftor/userScripts/master/thefp.js
+// @updateURL    https://raw.githubusercontent.com/jeeftor/userScripts/master/thefp.js
 // ==/UserScript==
 
 (function() {

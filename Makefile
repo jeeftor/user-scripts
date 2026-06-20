@@ -1,11 +1,13 @@
 USER_SCRIPTS := $(shell find . -maxdepth 1 -name '*.js'; find scripts -name '*.user.js' 2>/dev/null)
 
-.PHONY: help list patch minor major test
+.PHONY: help list changed-versions all-versions patch minor major test
 
 help:
 	@printf '%s\n' 'Available targets:'
 	@printf '  %-10s %s\n' 'help' 'Show this help.'
 	@printf '  %-10s %s\n' 'list' 'Show userscript versions.'
+	@printf '  %-16s %s\n' 'changed-versions' 'Increment patch versions for changed userscripts.'
+	@printf '  %-16s %s\n' 'all-versions' 'Increment patch versions for all userscripts.'
 	@printf '  %-10s %s\n' 'patch' 'Increment patch versions.'
 	@printf '  %-10s %s\n' 'minor' 'Increment minor versions.'
 	@printf '  %-10s %s\n' 'major' 'Increment major versions.'
@@ -17,6 +19,12 @@ list:
 		version=$$(awk '/\/\/ @version/ {print $$3; exit}' "$$file"); \
 		printf '  %s: %s\n' "$$file" "$${version:-none}"; \
 	done
+
+changed-versions:
+	node scripts/bump-userscript-versions.mjs --changed
+
+all-versions:
+	node scripts/bump-userscript-versions.mjs --all
 
 patch:
 	@for file in $(USER_SCRIPTS); do \

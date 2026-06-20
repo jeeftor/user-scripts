@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 
 const scriptPath = new URL('../scripts/ttyd-osc52-clipboard/ttyd-osc52-clipboard.user.js', import.meta.url);
 const freePressScriptPath = new URL('../thefp.js', import.meta.url);
+const makefilePath = new URL('../Makefile', import.meta.url);
 const abookScriptPath = new URL('../scripts/abook-nzb-helpers/abook-nzb-helpers.user.js', import.meta.url);
 const nzbkingScriptPath = new URL(
   '../scripts/nzbking-named-downloader/nzbking-named-downloader.user.js',
@@ -60,16 +61,21 @@ test('existing Free Press script is preserved at the root update URL path', asyn
   assert.match(source, /@name\s+Free Press Audio Downloader/);
   assert.match(source, /@match\s+https:\/\/www\.thefp\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/\*\.substack\.com\/\*/);
-  assert.match(source, /@updateURL\s+https:\/\/raw\.githubusercontent\.com\/jeeftor\/user-scripts\/master\/thefp\.js/);
+  assert.match(source, /@version\s+0\.0\.5/);
+  assert.match(source, /@updateURL\s+https:\/\/raw\.githubusercontent\.com\/jeeftor\/userScripts\/master\/thefp\.js/);
 });
 
 test('Abook NZB Helpers is tracked as an installable userscript', async () => {
   const source = await readFile(abookScriptPath, 'utf8');
 
   assert.match(source, /@name\s+Abook NZB Helpers/);
-  assert.match(source, /@version\s+1/);
+  assert.match(source, /@version\s+1\.0\.1/);
   assert.match(source, /@match\s+https:\/\/abook\.link\/book\/index\.php\?topic=\*/);
   assert.match(source, /@noframes/);
+  assert.match(source, /const NZBLNK_ICON_SRC = 'data:image\/svg\+xml/);
+  assert.match(source, /function textContentOf/);
+  assert.match(source, /function parsePostTimestamp/);
+  assert.match(source, /if \(typeof saythanks !== 'undefined'/);
   assert.match(source, /function inject_nzbdonkey/);
   assert.match(source, /function inject_search/);
   assert.match(source, /https:\/\/nzbking\.com\/search\/\?q=/);
@@ -79,10 +85,22 @@ test('NZBKing Named Downloader is tracked as an installable userscript', async (
   const source = await readFile(nzbkingScriptPath, 'utf8');
 
   assert.match(source, /@name\s+NZBKing Named Downloader/);
-  assert.match(source, /@version\s+1/);
+  assert.match(source, /@version\s+1\.0\.1/);
   assert.match(source, /@match\s+https:\/\/nzbking\.com\/\*/);
   assert.match(source, /@noframes/);
+  assert.match(source, /const DEBUG = false/);
   assert.match(source, /async function getClipboardText/);
   assert.match(source, /function sanitizeFilename/);
-  assert.match(source, /document\.querySelectorAll\('a\[href\^="\/nzb:"\]'\)/);
+  assert.match(source, /function scanForNzbLinks/);
+  assert.match(source, /new MutationObserver/);
+  assert.match(source, /querySelectorAll\('a\[href\^="\/nzb:"\]'\)/);
+});
+
+test('Makefile can bump versions for changed userscripts or all userscripts', async () => {
+  const source = await readFile(makefilePath, 'utf8');
+
+  assert.match(source, /changed-versions/);
+  assert.match(source, /all-versions/);
+  assert.match(source, /scripts\/bump-userscript-versions\.mjs --changed/);
+  assert.match(source, /scripts\/bump-userscript-versions\.mjs --all/);
 });

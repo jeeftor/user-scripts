@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name     NZBKing Named Downloader
-// @version  1
+// @version  1.0.1
 // @match    https://nzbking.com/*
 // @run-at   document-idle
 // @noframes
 // ==/UserScript==
 
 (() => {
-  const DEBUG = true;
+  const DEBUG = false;
   const log = DEBUG ? console.log.bind(console, '[NZBKing DL]') : () => {};
 
   function sanitizeFilename(name) {
@@ -123,8 +123,12 @@
   }
 
   function injectButton(nzbLink) {
+    if (nzbLink.dataset.namedDownloaderInjected) return;
+
     const nzbId = getNzbId(nzbLink);
     if (!nzbId) return;
+
+    nzbLink.dataset.namedDownloaderInjected = 'true';
 
     const btn = document.createElement('a');
     btn.className = 'button';
@@ -171,12 +175,29 @@
     }
   }
 
-  const nzbLinks = document.querySelectorAll('a[href^="/nzb:"]');
-  for (const link of nzbLinks) {
-    injectButton(link);
+  function scanForNzbLinks(root = document) {
+    const nzbLinks = root.querySelectorAll('a[href^="/nzb:"]');
+    for (const link of nzbLinks) {
+      injectButton(link);
+    }
   }
 
+  scanForNzbLinks();
   refreshLabels();
+
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (node.nodeType !== Node.ELEMENT_NODE) continue;
+        if (node.matches?.('a[href^="/nzb:"]')) {
+          injectButton(node);
+        }
+        scanForNzbLinks(node);
+      }
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
 
   window.addEventListener('focus', () => {
     log('window focus triggered refresh');
