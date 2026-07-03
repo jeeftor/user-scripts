@@ -1,6 +1,9 @@
 USER_SCRIPTS := $(shell find . -maxdepth 1 -name '*.js'; find scripts -name '*.user.js' 2>/dev/null)
 
-.PHONY: help list changed-versions all-versions patch minor major test check
+.PHONY: help list changed-versions all-versions patch minor major test check install-hooks
+
+install-hooks:
+	git config core.hooksPath .githooks
 
 help:
 	@printf '%s\n' 'Available targets:'

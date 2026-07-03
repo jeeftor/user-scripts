@@ -12,6 +12,10 @@ const nzbkingScriptPath = new URL(
   '../scripts/nzbking-named-downloader/nzbking-named-downloader.user.js',
   import.meta.url,
 );
+const novncScriptPath = new URL(
+  '../scripts/novnc-clipboard-bridge/novnc-clipboard-bridge.user.js',
+  import.meta.url,
+);
 
 const userscripts = [
   {
@@ -36,7 +40,13 @@ const userscripts = [
     name: 'ttyd OSC52 Clipboard',
     path: 'scripts/ttyd-osc52-clipboard/ttyd-osc52-clipboard.user.js',
     url: scriptPath,
-    version: '0.1.1',
+    version: '0.1.2',
+  },
+  {
+    name: 'noVNC Clipboard Bridge',
+    path: 'scripts/novnc-clipboard-bridge/novnc-clipboard-bridge.user.js',
+    url: novncScriptPath,
+    version: '0.1.0',
   },
 ];
 
@@ -49,7 +59,7 @@ test('userscript metadata is public and installable', async () => {
 
   assert.match(source, /\/\/ ==UserScript==/);
   assert.match(source, /@name\s+ttyd OSC52 Clipboard/);
-  assert.match(source, /@version\s+0\.1\.1/);
+  assert.match(source, /@version\s+0\.1\.2/);
   assert.match(source, /@description\s+Copy tmux OSC52 clipboard sequences from ttyd\/xterm\.js/);
   assert.match(source, /@author\s+jeeftor/);
   assert.match(source, /@downloadURL\s+https:\/\/raw\.githubusercontent\.com\/jeeftor\/userScripts\/master\/scripts\/ttyd-osc52-clipboard\/ttyd-osc52-clipboard\.user\.js/);
@@ -176,6 +186,41 @@ test('README exposes raw install links for each userscript', async () => {
     assert.match(source, new RegExp(`\\[${userscript.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]`), userscript.name);
     assert.match(source, new RegExp(rawUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), userscript.name);
   }
+});
+
+test('noVNC Clipboard Bridge has correct structure and host allowlist pattern', async () => {
+  const source = await readFile(novncScriptPath, 'utf8');
+
+  assert.match(source, /@name\s+noVNC Clipboard Bridge/);
+  assert.match(source, /@description\s+Floating paste\/copy buttons/);
+  assert.match(source, /@grant\s+GM_setClipboard/);
+  assert.match(source, /@grant\s+GM_getValue/);
+  assert.match(source, /@grant\s+GM_setValue/);
+  assert.match(source, /@grant\s+GM_registerMenuCommand/);
+  assert.match(source, /@grant\s+unsafeWindow/);
+
+  // Host allowlist pattern (same as ttyd script)
+  assert.match(source, /GM_getValue\('allowedHosts', \[\]\)/);
+  assert.match(source, /GM_setValue\('allowedHosts'/);
+  assert.match(source, /GM_registerMenuCommand\('Allow this host'/);
+  assert.match(source, /GM_registerMenuCommand\('Forget this host'/);
+  assert.match(source, /getAllowedHosts\(\)\.includes\(location\.hostname\)/);
+
+  // Auto-copy toggle stored outside git
+  assert.match(source, /GM_getValue\('autoCopy', false\)/);
+  assert.match(source, /GM_setValue\('autoCopy'/);
+  assert.match(source, /GM_registerMenuCommand\('Toggle auto-copy from VM'/);
+
+  // Core functionality
+  assert.match(source, /rfb\.clipboardPasteFrom\(text\)/);
+  assert.match(source, /rfb\.sendKey\(0xFFE3, 'ControlLeft'/);
+  assert.match(source, /rfb\.sendKey\(0x0076, 'KeyV'/);
+  assert.match(source, /GM_setClipboard\(text, 'text'\)/);
+  assert.match(source, /navigator\.clipboard\.readText\(\)/);
+  assert.match(source, /noVNC_clipboard_text/);
+  assert.match(source, /unsafeWindow\.UI/);
+  assert.match(source, /setInterval/);
+  assert.match(source, /attempts >= 60/);
 });
 
 test('GitHub Actions runs the repository check target', async () => {

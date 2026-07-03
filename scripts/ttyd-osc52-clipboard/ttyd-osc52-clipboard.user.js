@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         ttyd OSC52 Clipboard
-// @version      0.1.1
+// @version      0.1.2
 // @description  Copy tmux OSC52 clipboard sequences from ttyd/xterm.js
 // @author       jeeftor
 // @match        http://*/*
@@ -76,7 +76,9 @@
   }
 
   function findTerm() {
-    const textarea = document.querySelector('.xterm-helper-textarea');
+    // Use unsafeWindow.document so Firefox's XRay wrapper doesn't hide
+    // expando properties (like __xtermTerminal) set by the page script.
+    const textarea = unsafeWindow.document.querySelector('.xterm-helper-textarea');
 
     return unsafeWindow.term ||
       (textarea && textarea.__xtermTerminal) ||

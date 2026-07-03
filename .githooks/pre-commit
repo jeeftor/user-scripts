@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+
+# Bump @version for any staged/modified userscripts, then re-stage the bumps.
+make changed-versions
+
+# Re-stage any userscript files whose only change is the version bump.
+git diff --name-only | grep -E '(^scripts/.+\.user\.js$|^thefp\.js$)' | xargs git add --
