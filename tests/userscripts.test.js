@@ -56,7 +56,7 @@ const userscripts = [
     name: 'ttyd Shift+Enter Newline',
     path: 'scripts/ttyd-shift-enter/ttyd-shift-enter.user.js',
     url: shiftEnterScriptPath,
-    version: '0.2.0',
+    version: '0.3.0',
   },
 ];
 
@@ -256,12 +256,16 @@ test('ttyd Shift+Enter Newline intercepts Shift+Enter and sends a literal newlin
   assert.match(source, /e\.shiftKey/);
   assert.match(source, /return false;/);
 
-  // Sends newline via term.paste() (respects bracketed paste mode)
+  // Sends newline via term.paste() (respects bracketed paste mode) or raw
   assert.match(source, /term\.paste\(seq\)/);
-  assert.match(source, /GM_getValue\('shiftEnterSequence', '\\n'\)/);
+  assert.match(source, /triggerDataEvent\(seq, true\)/);
+  assert.match(source, /GM_getValue\('shiftEnterMode', 'paste-newline'\)/);
 
-  // Configurable sequence via menu commands
-  assert.match(source, /GM_registerMenuCommand\('Set sequence to/);
+  // Configurable modes via menu commands (paste newline, paste ESC+CR, raw newline, raw ESC+CR)
+  assert.match(source, /GM_registerMenuCommand\('Mode: paste \\\\n/);
+  assert.match(source, /GM_registerMenuCommand\('Mode: raw \\\\n/);
+  assert.match(source, /GM_registerMenuCommand\('Mode: paste ESC\+CR/);
+  assert.match(source, /GM_registerMenuCommand\('Mode: raw ESC\+CR/);
   assert.match(source, /setInterval/);
   assert.match(source, /attempts >= 60/);
 });
