@@ -56,7 +56,7 @@ const userscripts = [
     name: 'ttyd Shift+Enter Newline',
     path: 'scripts/ttyd-shift-enter/ttyd-shift-enter.user.js',
     url: shiftEnterScriptPath,
-    version: '0.4.0',
+    version: '0.4.1',
   },
 ];
 

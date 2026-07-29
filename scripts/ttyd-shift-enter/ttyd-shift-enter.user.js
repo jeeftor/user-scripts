@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         ttyd Shift+Enter Newline
-// @version      0.4.0
+// @version      0.4.1
 // @description  Send a literal newline (not execute) when Shift+Enter is pressed in ttyd/xterm.js
 // @author       jeeftor
 // @match        http://*/*
@@ -234,6 +234,10 @@
         }
       }
 
+      // Log all events when debug is on, so we can see keydown/keyup/repeat.
+      log('event:', e.type, 'key:', e.key, 'shift:', e.shiftKey,
+        'repeat:', e.repeat, 'ctrl:', e.ctrlKey, 'alt:', e.altKey, 'meta:', e.metaKey);
+
       if (e.type !== 'keydown') {
         return true;
       }
@@ -244,7 +248,7 @@
 
       const mode = getMode();
       const ok = sendData(term, mode);
-      log('shift+enter mode:', mode, 'sent:', ok);
+      log('shift+enter mode:', mode, 'sent:', ok, 'repeat:', e.repeat);
 
       // Return false so xterm.js does NOT send its default \r for Enter.
       return false;
