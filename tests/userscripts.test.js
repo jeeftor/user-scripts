@@ -16,6 +16,10 @@ const novncScriptPath = new URL(
   '../scripts/novnc-clipboard-bridge/novnc-clipboard-bridge.user.js',
   import.meta.url,
 );
+const shiftEnterScriptPath = new URL(
+  '../scripts/ttyd-shift-enter/ttyd-shift-enter.user.js',
+  import.meta.url,
+);
 
 const userscripts = [
   {
@@ -46,6 +50,12 @@ const userscripts = [
     name: 'noVNC Clipboard Bridge',
     path: 'scripts/novnc-clipboard-bridge/novnc-clipboard-bridge.user.js',
     url: novncScriptPath,
+    version: '0.1.0',
+  },
+  {
+    name: 'ttyd Shift+Enter Newline',
+    path: 'scripts/ttyd-shift-enter/ttyd-shift-enter.user.js',
+    url: shiftEnterScriptPath,
     version: '0.1.0',
   },
 ];
@@ -219,6 +229,40 @@ test('noVNC Clipboard Bridge has correct structure and host allowlist pattern', 
   assert.match(source, /navigator\.clipboard\.readText\(\)/);
   assert.match(source, /noVNC_clipboard_text/);
   assert.match(source, /unsafeWindow\.UI/);
+  assert.match(source, /setInterval/);
+  assert.match(source, /attempts >= 60/);
+});
+
+test('ttyd Shift+Enter Newline intercepts Shift+Enter and sends a literal newline', async () => {
+  const source = await readFile(shiftEnterScriptPath, 'utf8');
+
+  assert.match(source, /@name\s+ttyd Shift\+Enter Newline/);
+  assert.match(source, /@description\s+Send a literal newline/);
+  assert.match(source, /@grant\s+GM_getValue/);
+  assert.match(source, /@grant\s+GM_setValue/);
+  assert.match(source, /@grant\s+GM_registerMenuCommand/);
+  assert.match(source, /@grant\s+unsafeWindow/);
+
+  // Host allowlist pattern (same as other ttyd scripts)
+  assert.match(source, /GM_getValue\('allowedHosts', \[\]\)/);
+  assert.match(source, /GM_setValue\('allowedHosts'/);
+  assert.match(source, /GM_registerMenuCommand\('Allow this host'/);
+  assert.match(source, /GM_registerMenuCommand\('Forget this host'/);
+  assert.match(source, /getAllowedHosts\(\)\.includes\(location\.hostname\)/);
+
+  // Shift+Enter interception on xterm helper textarea
+  assert.match(source, /querySelector\('\.xterm-helper-textarea'\)/);
+  assert.match(source, /e\.key !== 'Enter'/);
+  assert.match(source, /e\.shiftKey/);
+  assert.match(source, /e\.preventDefault\(\)/);
+  assert.match(source, /e\.stopPropagation\(\)/);
+
+  // Sends newline via term.paste() (respects bracketed paste mode)
+  assert.match(source, /term\.paste\(seq\)/);
+  assert.match(source, /GM_getValue\('shiftEnterSequence', '\\n'\)/);
+
+  // Configurable sequence via menu commands
+  assert.match(source, /GM_registerMenuCommand\('Set sequence to/);
   assert.match(source, /setInterval/);
   assert.match(source, /attempts >= 60/);
 });
