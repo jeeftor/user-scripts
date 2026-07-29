@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         ttyd Shift+Enter Newline
-// @version      0.1.0
+// @version      0.2.0
 // @description  Send a literal newline (not execute) when Shift+Enter is pressed in ttyd/xterm.js
 // @author       jeeftor
 // @match        http://*/*
@@ -82,6 +82,31 @@
     console.log(PREFIX, 'sequence set to ESC+CR');
   });
 
+  function sendData(term, seq) {
+    // term.paste() is the public xterm.js API for injecting text. When
+    // bracketed paste mode is active (default in modern bash/zsh), pasted
+    // newlines are inserted literally rather than executing the command.
+    if (typeof term.paste === 'function') {
+      term.paste(seq);
+      return true;
+    }
+
+    // Fallback: use internal core service to trigger a data event directly.
+    if (term._core && term._core.coreService && typeof term._core.coreService.triggerDataEvent === 'function') {
+      term._core.coreService.triggerDataEvent(seq, true);
+      return true;
+    }
+
+    // Older xterm.js: write directly to the pty handler.
+    if (typeof term.handler === 'function') {
+      term.handler(seq);
+      return true;
+    }
+
+    console.warn(PREFIX, 'no method available to send data to terminal');
+    return false;
+  }
+
   function findTerm() {
     const textarea = unsafeWindow.document.querySelector('.xterm-helper-textarea');
 
@@ -90,48 +115,51 @@
       null;
   }
 
-  function findTextarea() {
-    return unsafeWindow.document.querySelector('.xterm-helper-textarea');
-  }
-
-  function install(term, textarea) {
-    if (!term || !textarea) {
+  function install(term) {
+    if (!term) {
       return false;
     }
 
-    if (textarea[MARK]) {
+    if (term[MARK]) {
       return true;
     }
 
-    // Intercept Shift+Enter on the xterm helper textarea. xterm.js listens
-    // for keydown on this element; capturing phase lets us run first.
-    textarea.addEventListener('keydown', function (e) {
-      if (e.key !== 'Enter' || !e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) {
-        return;
+    if (typeof term.attachCustomKeyEventHandler !== 'function') {
+      console.warn(PREFIX, 'attachCustomKeyEventHandler not available');
+      return false;
+    }
+
+    // Preserve any existing custom key handler (e.g., one set by ttyd itself)
+    // so we don't clobber its behavior for other keys.
+    const prevHandler = term._customKeyEventHandler || null;
+
+    term.attachCustomKeyEventHandler(function (e) {
+      // Chain to the previous handler first. If it returns false, it wants
+      // to suppress the key — respect that and don't process further.
+      if (prevHandler) {
+        const result = prevHandler(e);
+        if (result === false) {
+          return false;
+        }
       }
 
-      e.preventDefault();
-      e.stopPropagation();
+      if (e.type !== 'keydown') {
+        return true;
+      }
+
+      if (e.key !== 'Enter' || !e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) {
+        return true;
+      }
 
       const seq = getSequence();
+      const ok = sendData(term, seq);
+      log('shift+enter ->', JSON.stringify(seq), 'sent:', ok);
 
-      // term.paste() is the public xterm.js API for injecting text. When
-      // bracketed paste mode is active (default in modern bash/zsh), pasted
-      // newlines are inserted literally rather than executing the command.
-      // For ESC+CR we also use paste() so the sequence reaches the pty.
-      if (typeof term.paste === 'function') {
-        term.paste(seq);
-      } else if (term._core && term._core.coreService) {
-        term._core.coreService.triggerDataEvent(seq, true);
-      } else {
-        // Last-resort fallback: dispatch a synthetic input event.
-        console.warn(PREFIX, 'no paste method available on terminal');
-      }
+      // Return false so xterm.js does NOT send its default \r for Enter.
+      return false;
+    });
 
-      log('shift+enter ->', JSON.stringify(seq));
-    }, true);
-
-    textarea[MARK] = true;
+    term[MARK] = true;
     console.log(PREFIX, 'installed for', location.hostname);
     return true;
   }
@@ -141,7 +169,7 @@
   const timer = setInterval(function () {
     attempts += 1;
 
-    if (install(findTerm(), findTextarea())) {
+    if (install(findTerm())) {
       clearInterval(timer);
       return;
     }

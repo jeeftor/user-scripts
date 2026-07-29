@@ -56,7 +56,7 @@ const userscripts = [
     name: 'ttyd Shift+Enter Newline',
     path: 'scripts/ttyd-shift-enter/ttyd-shift-enter.user.js',
     url: shiftEnterScriptPath,
-    version: '0.1.0',
+    version: '0.2.0',
   },
 ];
 
@@ -250,12 +250,11 @@ test('ttyd Shift+Enter Newline intercepts Shift+Enter and sends a literal newlin
   assert.match(source, /GM_registerMenuCommand\('Forget this host'/);
   assert.match(source, /getAllowedHosts\(\)\.includes\(location\.hostname\)/);
 
-  // Shift+Enter interception on xterm helper textarea
-  assert.match(source, /querySelector\('\.xterm-helper-textarea'\)/);
+  // Shift+Enter interception via xterm.js custom key handler API
+  assert.match(source, /attachCustomKeyEventHandler/);
   assert.match(source, /e\.key !== 'Enter'/);
   assert.match(source, /e\.shiftKey/);
-  assert.match(source, /e\.preventDefault\(\)/);
-  assert.match(source, /e\.stopPropagation\(\)/);
+  assert.match(source, /return false;/);
 
   // Sends newline via term.paste() (respects bracketed paste mode)
   assert.match(source, /term\.paste\(seq\)/);
