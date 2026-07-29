@@ -56,7 +56,7 @@ const userscripts = [
     name: 'ttyd Shift+Enter Newline',
     path: 'scripts/ttyd-shift-enter/ttyd-shift-enter.user.js',
     url: shiftEnterScriptPath,
-    version: '0.3.0',
+    version: '0.4.0',
   },
 ];
 
@@ -266,6 +266,12 @@ test('ttyd Shift+Enter Newline intercepts Shift+Enter and sends a literal newlin
   assert.match(source, /GM_registerMenuCommand\('Mode: raw \\\\n/);
   assert.match(source, /GM_registerMenuCommand\('Mode: paste ESC\+CR/);
   assert.match(source, /GM_registerMenuCommand\('Mode: raw ESC\+CR/);
+
+  // Test commands
+  assert.match(source, /GM_registerMenuCommand\('Test current mode'/);
+  assert.match(source, /GM_registerMenuCommand\('Test all modes'/);
+  assert.match(source, /testMode\(term, mode\)/);
+  assert.match(source, /# \[/);
   assert.match(source, /setInterval/);
   assert.match(source, /attempts >= 60/);
 });

@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         ttyd Shift+Enter Newline
-// @version      0.3.0
+// @version      0.4.0
 // @description  Send a literal newline (not execute) when Shift+Enter is pressed in ttyd/xterm.js
 // @author       jeeftor
 // @match        http://*/*
@@ -142,8 +142,8 @@
     return false;
   }
 
-  function sendData(term) {
-    const mode = getMode();
+  function sendData(term, mode) {
+    mode = mode || getMode();
 
     if (mode === 'paste-newline') {
       return sendPaste(term, '\n');
@@ -161,6 +161,42 @@
     // Unknown mode: fall back to default.
     return sendPaste(term, '\n');
   }
+
+  // Test commands send a labeled marker prefixed with '#' (a shell comment)
+  // followed by the mode's sequence. If the newline is literal, the marker
+  // text stays on the input line and the cursor drops to a continuation
+  // line. If it executes, the comment runs as a harmless no-op. Either way
+  // you can see the effect without pressing Shift+Enter.
+  function testMode(term, mode) {
+    const label = '# [' + mode + ']';
+    sendPaste(term, label);
+    sendData(term, mode);
+    console.log(PREFIX, 'tested mode:', mode);
+  }
+
+  GM_registerMenuCommand('Test current mode', function () {
+    const term = findTerm();
+    if (!term) {
+      console.warn(PREFIX, 'no terminal found for test');
+      return;
+    }
+    testMode(term, getMode());
+  });
+
+  GM_registerMenuCommand('Test all modes', function () {
+    const term = findTerm();
+    if (!term) {
+      console.warn(PREFIX, 'no terminal found for test');
+      return;
+    }
+    const modes = ['paste-newline', 'paste-esc-cr', 'raw-newline', 'raw-esc-cr'];
+    modes.forEach(function (mode, i) {
+      // Small delay between each so they don't blend together.
+      setTimeout(function () {
+        testMode(term, mode);
+      }, i * 500);
+    });
+  });
 
   function findTerm() {
     const textarea = unsafeWindow.document.querySelector('.xterm-helper-textarea');
@@ -207,7 +243,7 @@
       }
 
       const mode = getMode();
-      const ok = sendData(term);
+      const ok = sendData(term, mode);
       log('shift+enter mode:', mode, 'sent:', ok);
 
       // Return false so xterm.js does NOT send its default \r for Enter.
